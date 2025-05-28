@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Список покупок</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Подключаем Telegram Web App API -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    h1 {
+      font-size: 20px;
+    }
+    input, button {
+      font-size: 16px;
+      padding: 8px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #fff;
+      padding: 8px;
+      margin-top: 5px;
+      display: flex;
+      justify-content: space-between;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Привет, <span id="username">гость</span>!</h1>
+
+  <input type="text" id="itemInput" placeholder="Что купить?" />
+  <button onclick="addItem()">Добавить</button>
+
+  <ul id="itemList"></ul>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+
+    // 1. Показываем имя пользователя
+    tg.expand(); // разворачиваем окно Telegram
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      document.getElementById("username").textContent = tg.initDataUnsafe.user.first_name;
+    }
+
+    // 2. Загружаем список из памяти
+    const listElement = document.getElementById("itemList");
+    let items = JSON.parse(localStorage.getItem("shoppingList") || "[]");
+    items.forEach(item => renderItem(item));
+
+    // 3. Функция добавления товара
+    function addItem() {
+      const input = document.getElementById("itemInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      items.push(text);
+      localStorage.setItem("shoppingList", JSON.stringify(items));
+      renderItem(text);
+      input.value = "";
+    }
+
+    // 4. Отображение товара
+    function renderItem(text) {
+      const li = document.createElement("li");
+      li.innerHTML = `${text} <button onclick="removeItem(this)">Удалить</button>`;
+      listElement.appendChild(li);
+    }
+
+    // 5. Удаление товара
+    function removeItem(button) {
+      const li = button.parentElement;
+      const text = li.firstChild.textContent.trim();
+      items = items.filter(i => i !== text);
+      localStorage.setItem("shoppingList", JSON.stringify(items));
+      li.remove();
+    }
+  </script>
+
+</body>
+</html>
