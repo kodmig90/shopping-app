@@ -48,19 +48,19 @@
   <ul id="itemList"></ul>
 
   <script>
-    const tg = window.Telegram.WebApp;
+    // Supabase инициализация
+    const supabaseUrl = 'https://uyipzqafrwusfipwuzym.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5aXB6cWFmcnd1c2ZpcHd1enltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjY4NjIsImV4cCI6MjA2NDU0Mjg2Mn0.O8pAIyK_v1_4W2MXX72TB622OPBYh97qbzT35saOP-A';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     // Telegram: имя пользователя
+    const tg = window.Telegram.WebApp;
     tg.expand();
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
       document.getElementById("username").textContent = tg.initDataUnsafe.user.first_name;
     }
 
-    // Supabase подключение
-    const supabaseUrl = 'https://uyipzqafrwusfipwuzym.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5aXB6cWFmcnd1c2ZpcHd1enltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjY4NjIsImV4cCI6MjA2NDU0Mjg2Mn0.O8pAIyK_v1_4W2MXX72TB622OPBYh97qbzT35saOP-A';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
+    // Проверка подключения к Supabase
     async function testConnection() {
       const { data, error } = await supabase.from('shopping_list').select('*');
       if (error) {
@@ -71,7 +71,7 @@
     }
     testConnection();
 
-    // Пока сохраняем в localStorage (будем заменять на Supabase позже)
+    // Пока: localStorage
     const listElement = document.getElementById("itemList");
     let items = JSON.parse(localStorage.getItem("shoppingList") || "[]");
     items.forEach(item => renderItem(item));
