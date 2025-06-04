@@ -9,7 +9,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.3/dist/umd/supabase.min.js"></script>
 
   <style>
     body {
@@ -48,19 +48,19 @@
   <ul id="itemList"></ul>
 
   <script>
-    // Supabase инициализация
+    // Supabase подключение
     const supabaseUrl = 'https://uyipzqafrwusfipwuzym.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5aXB6cWFmcnd1c2ZpcHd1enltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjY4NjIsImV4cCI6MjA2NDU0Mjg2Mn0.O8pAIyK_v1_4W2MXX72TB622OPBYh97qbzT35saOP-A';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // Telegram: имя пользователя
+    // Telegram имя
     const tg = window.Telegram.WebApp;
     tg.expand();
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
       document.getElementById("username").textContent = tg.initDataUnsafe.user.first_name;
     }
 
-    // Проверка подключения к Supabase
+    // Проверка подключения
     async function testConnection() {
       const { data, error } = await supabase.from('shopping_list').select('*');
       if (error) {
@@ -69,9 +69,10 @@
         console.log('✅ Данные из Supabase:', data);
       }
     }
+
     testConnection();
 
-    // Пока: localStorage
+    // Пока сохраняем в localStorage
     const listElement = document.getElementById("itemList");
     let items = JSON.parse(localStorage.getItem("shoppingList") || "[]");
     items.forEach(item => renderItem(item));
