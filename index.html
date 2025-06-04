@@ -53,39 +53,54 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5aXB6cWFmcnd1c2ZpcHd1enltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjY4NjIsImV4cCI6MjA2NDU0Mjg2Mn0.O8pAIyK_v1_4W2MXX72TB622OPBYh97qbzT35saOP-A';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // Telegram имя
+    // Telegram API
     const tg = window.Telegram.WebApp;
     tg.expand();
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      document.getElementById("username").textContent = tg.initDataUnsafe.user.first_name;
+    const usernameSpan = document.getElementById("username");
+    const telegram_id = tg.initDataUnsafe?.user?.id;
+    if (tg.initDataUnsafe?.user?.first_name) {
+      usernameSpan.textContent = tg.initDataUnsafe.user.first_name;
     }
 
-    // Проверка подключения
-    async function testConnection() {
-      const { data, error } = await supabase.from('shopping_list').select('*');
+    const listElement = document.getElementById("itemList");
+
+    // Загрузка данных из Supabase
+    async function loadItemsFromSupabase() {
+      if (!telegram_id) return;
+      const { data, error } = await supabase
+        .from('shopping_list')
+        .select('item')
+        .eq('telegram_id', telegram_id)
+        .order('added_at', { ascending: false });
+
       if (error) {
-        console.error('❌ Ошибка подключения к Supabase:', error);
+        console.error("❌ Ошибка при загрузке данных:", error);
       } else {
-        console.log('✅ Данные из Supabase:', data);
+        listElement.innerHTML = ""; // очищаем список
+        data.forEach(row => renderItem(row.item));
+        console.log("✅ Загружено из Supabase:", data);
       }
     }
 
-    testConnection();
+    loadItemsFromSupabase();
 
-    // Пока сохраняем в localStorage
-    const listElement = document.getElementById("itemList");
-    let items = JSON.parse(localStorage.getItem("shoppingList") || "[]");
-    items.forEach(item => renderItem(item));
-
-    function addItem() {
+    // Добавление нового товара
+    async function addItem() {
       const input = document.getElementById("itemInput");
       const text = input.value.trim();
-      if (!text) return;
+      if (!text || !telegram_id) return;
 
-      items.push(text);
-      localStorage.setItem("shoppingList", JSON.stringify(items));
-      renderItem(text);
-      input.value = "";
+      const { error } = await supabase.from('shopping_list').insert([
+        { telegram_id: telegram_id, item: text }
+      ]);
+
+      if (error) {
+        console.error("❌ Ошибка при добавлении в Supabase:", error);
+        alert("Не удалось сохранить товар 😞");
+      } else {
+        renderItem(text);
+        input.value = "";
+      }
     }
 
     function renderItem(text) {
@@ -94,12 +109,23 @@
       listElement.appendChild(li);
     }
 
-    function removeItem(button) {
+    async function removeItem(button) {
       const li = button.parentElement;
       const text = li.firstChild.textContent.trim();
-      items = items.filter(i => i !== text);
-      localStorage.setItem("shoppingList", JSON.stringify(items));
-      li.remove();
+
+      // Удаление из Supabase по item и telegram_id
+      const { error } = await supabase
+        .from('shopping_list')
+        .delete()
+        .eq('telegram_id', telegram_id)
+        .eq('item', text);
+
+      if (error) {
+        console.error("❌ Ошибка при удалении:", error);
+        alert("Не удалось удалить товар");
+      } else {
+        li.remove();
+      }
     }
   </script>
 
