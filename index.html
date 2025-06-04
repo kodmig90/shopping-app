@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <title>Список покупок</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Подключаем Telegram Web App API -->
+
+  <!-- Telegram Web App API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     body {
       font-family: sans-serif;
@@ -45,18 +50,32 @@
   <script>
     const tg = window.Telegram.WebApp;
 
-    // 1. Показываем имя пользователя
-    tg.expand(); // разворачиваем окно Telegram
+    // Telegram: имя пользователя
+    tg.expand();
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
       document.getElementById("username").textContent = tg.initDataUnsafe.user.first_name;
     }
 
-    // 2. Загружаем список из памяти
+    // Supabase подключение
+    const supabaseUrl = 'https://uyipzqafrwusfipwuzym.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5aXB6cWFmcnd1c2ZpcHd1enltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NjY4NjIsImV4cCI6MjA2NDU0Mjg2Mn0.O8pAIyK_v1_4W2MXX72TB622OPBYh97qbzT35saOP-A';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function testConnection() {
+      const { data, error } = await supabase.from('shopping_list').select('*');
+      if (error) {
+        console.error('❌ Ошибка подключения к Supabase:', error);
+      } else {
+        console.log('✅ Данные из Supabase:', data);
+      }
+    }
+    testConnection();
+
+    // Пока сохраняем в localStorage (будем заменять на Supabase позже)
     const listElement = document.getElementById("itemList");
     let items = JSON.parse(localStorage.getItem("shoppingList") || "[]");
     items.forEach(item => renderItem(item));
 
-    // 3. Функция добавления товара
     function addItem() {
       const input = document.getElementById("itemInput");
       const text = input.value.trim();
@@ -68,14 +87,12 @@
       input.value = "";
     }
 
-    // 4. Отображение товара
     function renderItem(text) {
       const li = document.createElement("li");
       li.innerHTML = `${text} <button onclick="removeItem(this)">Удалить</button>`;
       listElement.appendChild(li);
     }
 
-    // 5. Удаление товара
     function removeItem(button) {
       const li = button.parentElement;
       const text = li.firstChild.textContent.trim();
